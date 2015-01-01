@@ -1,15 +1,13 @@
 from datetime import datetime
-from collections import OrderedDict
 from itertools import chain
 
 from sqlalchemy.types import Integer, DateTime
 
-from skylines import db
+from skylines.model import db
 from .user import User
 from .club import Club
-from .flight import Flight
-from .flight_comment import FlightComment
 from .follower import Follower
+from .flight import Flight
 
 
 class Event(db.Model):
@@ -100,7 +98,10 @@ class Notification(db.Model):
 
     @classmethod
     def query_unread(cls, recipient):
-        return cls.query(recipient=recipient, time_read=None)
+        return cls.query(recipient=recipient, time_read=None) \
+                  .join(cls.event) \
+                  .outerjoin(Event.flight) \
+                  .filter(Flight.is_rankable())
 
     @classmethod
     def count_unread(cls, recipient):

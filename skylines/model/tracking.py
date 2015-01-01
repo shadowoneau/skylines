@@ -9,7 +9,7 @@ from geoalchemy2.types import Geometry
 from geoalchemy2.shape import to_shape, from_shape
 from shapely.geometry import Point
 
-from skylines import db
+from skylines.model import db
 from .user import User
 from .geo import Location
 
@@ -21,7 +21,7 @@ class TrackingFix(db.Model):
 
     time = db.Column(DateTime, nullable=False, default=datetime.utcnow)
 
-    location_wkt = db.Column('location', Geometry('POINT'))
+    location_wkt = db.Column('location', Geometry('POINT', srid=4326))
 
     track = db.Column(SmallInteger)
     ground_speed = db.Column(REAL)
@@ -32,7 +32,8 @@ class TrackingFix(db.Model):
     engine_noise_level = db.Column(SmallInteger)
 
     pilot_id = db.Column(
-        Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+        Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False,
+        index=True)
     pilot = db.relationship('User', innerjoin=True)
 
     ip = db.Column(INET)

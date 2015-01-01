@@ -1,6 +1,6 @@
 from sqlalchemy.types import Boolean, Float, Integer, DateTime, Interval
 
-from skylines import db
+from skylines.model import db
 
 
 class FlightPhase(db.Model):
@@ -26,7 +26,8 @@ class FlightPhase(db.Model):
 
     flight = db.relationship(
         'Flight', innerjoin=True,
-        backref=db.backref('_phases', order_by=start_time, passive_deletes=True))
+        backref=db.backref('_phases', passive_deletes=True, order_by=start_time,
+                           cascade='all, delete, delete-orphan'))
 
     aggregate = db.Column(Boolean, nullable=False)
     phase_type = db.Column(Integer)  # see PT_* constants

@@ -1,23 +1,45 @@
 services:
   tms:
     origin: 'nw'
-#  wms:
-#    srs: ['EPSG:3857'] #, 'EPSG:900913']
-#    image_formats: ['image/png']
-#    md:
-#      title: Airspace WMS Server
-#      abstract: Airspace WMS Server for SkyLines
+  wms:
+    srs: ['EPSG:3857']
+    image_formats: ['image/png']
+    md:
+      title: SkyLines WMS Server
 
 layers:
   - name: mwp
     title: Mountain Wave Project WMS
     sources: [mwp_cache]
 
+  - name: airspace+airports
+    title: Airspace and Airports WMS
+    sources: [airspace_airports_cache]
+
   - name: airspace
     title: Airspace WMS
     sources: [airspace_cache]
 
+  - name: osm
+    title: OpenStreetMap Tiles
+    sources: [osm_cache]
+
 caches:
+  airspace_airports_cache:
+    grids: [GLOBAL_MERCATOR]
+    # choose between airspace_mapserver_bin source and
+    # airspace_mapserver_wms source. The first one just
+    # needs the cgi-mapserver binary, the latter retrieves
+    # the map from a WMS server.
+    sources: [airspace_cache, airports_cache]
+    image:
+      format: image/png
+    format: image/png
+    request_format: image/png
+    link_single_color_images: true
+    cache:
+      type: sqlite
+
   mwp_cache:
     grids: [GLOBAL_MERCATOR]
     # choose between airspace_mapserver_bin source and
@@ -30,6 +52,23 @@ caches:
     format: image/png
     request_format: image/png
     link_single_color_images: true
+    cache:
+      type: sqlite
+
+  airports_cache:
+    grids: [GLOBAL_MERCATOR]
+    # choose between airspace_airports_mapserver_bin source and
+    # airspace_airports_mapserver_wms source. The first one just
+    # needs the cgi-mapserver binary, the latter retrieves
+    # the map from a WMS server.
+    sources: [airports_mapserver_wms]
+    image:
+      format: image/png
+    format: image/png
+    request_format: image/png
+    link_single_color_images: true
+    cache:
+      type: sqlite
 
   airspace_cache:
     grids: [GLOBAL_MERCATOR]
@@ -43,6 +82,14 @@ caches:
     format: image/png
     request_format: image/png
     link_single_color_images: true
+    cache:
+      type: sqlite
+
+  osm_cache:
+    sources: [osm_tiles]
+    format: image/png
+    cache:
+      type: sqlite
 
 sources:
   mwp_mapserver_bin:
@@ -58,11 +105,24 @@ sources:
       binary: /usr/lib/cgi-bin/mapserv
       working_dir: ../
 
+  airports_mapserver_bin:
+    type: mapserver
+    supported_srs: ['EPSG:3857']
+    req:
+      layers: Airports
+      map: ../skylines.map
+      transparent: true
+    image:
+      format: image/png
+    mapserver:
+      binary: /usr/lib/cgi-bin/mapserv
+      working_dir: ../
+
   airspace_mapserver_bin:
     type: mapserver
     supported_srs: ['EPSG:3857']
     req:
-      layers: Airports,Airspace
+      layers: Airspace
       map: ../skylines.map
       transparent: true
     image:
@@ -76,7 +136,17 @@ sources:
     supported_srs: ['EPSG:3857']
     req:
       layers: MWP
-      url: http://www.skylines-project.org/mapserver/?
+      url: https://maps.skylines.aero/mapserver/?
+      transparent: true
+    image:
+      format: image/png
+
+  airports_mapserver_wms:
+    type: wms
+    supported_srs: ['EPSG:3857']
+    req:
+      layers: Airports
+      url: https://maps.skylines.aero/mapserver/?
       transparent: true
     image:
       format: image/png
@@ -85,11 +155,21 @@ sources:
     type: wms
     supported_srs: ['EPSG:3857']
     req:
-      layers: Airports,Airspace
-      url: http://www.skylines-project.org/mapserver/?
+      layers: Airspace
+      url: https://maps.skylines.aero/mapserver/?
       transparent: true
     image:
       format: image/png
+
+  osm_tiles:
+    type: tile
+    url: http://c.tile.openstreetmap.org/%(tms_path)s.%(format)s
+    grid: osm_grid
+
+grids:
+  osm_grid:
+    srs: EPSG:3857
+    origin: nw
 
 globals:
   # # coordinate transformation options
@@ -122,7 +202,7 @@ globals:
   # image/transformation options
   image:
     paletted: false
-    resampling_method: nearest
+    resampling_method: bicubic
 
     formats:
       image/png:
@@ -143,3 +223,6 @@ globals:
 
   tiles:
     expires_hours: 48
+
+  http:
+    ssl_no_cert_checks: True

@@ -3,6 +3,7 @@
 
 # Coverage files
 .coverage
+cover
 
 # PyDev files
 .settings/*
@@ -22,9 +23,6 @@ dist
 htdocs
 
 webassets
-
-# XCSoar tools
-bin
 
 # Vagrant
 .vagrant

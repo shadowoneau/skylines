@@ -6,7 +6,7 @@ from geoalchemy2.types import Geometry
 from geoalchemy2.elements import WKTElement
 from geoalchemy2.shape import to_shape
 
-from skylines import db
+from skylines.model import db
 from .geo import Location
 
 
@@ -34,7 +34,7 @@ class Trace(db.Model):
 
     times = db.Column(postgresql.ARRAY(DateTime), nullable=False)
     _locations = db.Column(
-        'locations', Geometry('LINESTRING'), nullable=False)
+        'locations', Geometry('LINESTRING', srid=4326), nullable=False)
 
     @property
     def speed(self):

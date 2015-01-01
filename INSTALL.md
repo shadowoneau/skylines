@@ -64,31 +64,31 @@ a database for *SkyLines* roughly like this:
 
     # install PostGIS extensions into the PostgreSQL database
     $ psql -d skylines -c 'CREATE EXTENSION postgis;'
-    $ psql -d skylines -f /usr/share/postgresql/9.1/contrib/postgis-2.0/legacy_minimal.sql
 
     # install fuzzystrmatch extension into the database
     $ psql -d skylines -c 'CREATE EXTENSION fuzzystrmatch;'
 
-*Note: The location of the legacy_minimal.sql file may be different for other
-versions of PostgreSQL, PostGIS and other operating systems. See the
-appropriate documentation and websites for more information.*
+*Note: As of PostGIS 2.1.3, out-of-db rasters and all raster drivers are
+disabled by default. In order to re-enable these, you need to set the
+following environment variables: POSTGIS_GDAL_ENABLED_DRIVERS=GTiff and
+POSTGIS_ENABLE_OUTDB_RASTERS=1 in the server environment. For more
+information see the [PostGIS
+manual](http://postgis.net/docs/postgis_installation.html#install_short_version)
+and your distribution's documentation.*
 
 After creating the database you have to create the necessary tables and indices
-by calling the `./scripts/initialise_database.py` file from the the command
-line.
+by calling `./manage.py db create` from the the command line.
 
 
 ## XCSoar tools
 
 Since the [XCSoar](http://www.xcsoar.org/) project already has much of the code
 implemented that is necessary for flight analysis, it makes sense to reuse that
-code where applicable. *SkyLines* is using two tools from the range of XCSoar
-libraries called `AnalyseFlight` and `FlightPath`. These tools are installed
-and build by the `xcsoar` python package, which also includes wrappers for both
-tools. To build the tools you might have to install additional libraries like
-`libcurl`, which can be installed on Debian/Ubuntu by executing `apt-get
-install libcurl4-openssl-dev`. Please have a look into the XCSoar documentation
-if you need more help with the building process.
+code where applicable. *SkyLines* is using XCSoar as a python library. This library
+is build and installed by the `xcsoar` python package. To build this library you
+might have to install additional libraries like `libcurl`, which can be installed
+on Debian/Ubuntu by executing `apt-get install libcurl4-openssl-dev`. Please have
+a look into the XCSoar documentation if you need more help with the building process.
 
 
 ## Running the debug server
@@ -96,7 +96,7 @@ if you need more help with the building process.
 If the above steps are completed you should be able to run a base version of
 *SkyLines* locally now:
 
-    $ ./debug.py
+    $ ./manage.py runserver
 
 *(The following chapters are optional!)*
 
@@ -105,9 +105,10 @@ If the above steps are completed you should be able to run a base version of
 
 Since an empty database is boring, you should at least load the airports from
 the [Welt2000](http://www.segelflug.de/vereine/welt2000/) into the database by
-calling:
+calling (the `commit` flag indicates that any data should be written to the
+database):
 
-    $ ./scripts/import_welt2000.py
+    $ ./manage.py import welt2000 --commit
 
 
 ## Asynchronous tasks
@@ -122,4 +123,4 @@ need is to install the `redis-server` package:
 
 To run the Celery worker, call
 
-    $ ./celery_worker.py
+    $ ./manage.py celery runworker

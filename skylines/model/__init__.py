@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
-"""The application's model objects"""
+
+# flake8: noqa
+
+from flask.ext.sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy(session_options=dict(expire_on_commit=False))
 
 import skylines.model.base
 
@@ -10,9 +15,11 @@ from .airspace import Airspace
 from .club import Club
 from .elevation import Elevation
 from .event import Event, Notification
-from .flight import Flight
+from .flight import Flight, FlightPathChunks
+from .flight_meetings import FlightMeetings
 from .flight_comment import FlightComment
 from .flight_phase import FlightPhase
+from .contest_leg import ContestLeg
 from .follower import Follower
 from .geo import Location, Bounds
 from .igcfile import IGCFile

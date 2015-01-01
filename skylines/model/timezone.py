@@ -2,7 +2,7 @@ from pytz import timezone
 from sqlalchemy.types import Integer, String
 from geoalchemy2.types import Geometry
 
-from skylines import db
+from skylines.model import db
 
 
 class TimeZone(db.Model):
@@ -10,7 +10,7 @@ class TimeZone(db.Model):
 
     id = db.Column('gid', Integer, autoincrement=True, primary_key=True)
     tzid = db.Column(String(30))
-    the_geom = db.Column(Geometry('MULTIPOLYGON'))
+    the_geom = db.Column(Geometry('MULTIPOLYGON', srid=4326))
 
     def __unicode__(self):
         return self.tzid

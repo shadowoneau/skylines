@@ -9,9 +9,9 @@ from sqlalchemy.types import (
 )
 from sqlalchemy.sql.expression import cast, case
 from sqlalchemy.dialects.postgresql import INET
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 
-from skylines import db
+from skylines.model import db
 from skylines.lib.sql import LowerCaseComparator
 from skylines.lib.formatter import units
 
@@ -41,17 +41,19 @@ class User(db.Model):
 
     # Hashed password
 
-    _password = db.Column('password', Unicode(128))
+    _password = db.Column('password', Unicode(128), nullable=False)
 
     # The user's club (optional)
 
     club_id = db.Column(Integer, db.ForeignKey('clubs.id', ondelete='SET NULL'))
     club = db.relationship('Club', foreign_keys=[club_id], backref='members')
 
-    # Tracking key and delay in minutes
+    # Tracking key, delay in minutes and other settings
 
-    tracking_key = db.Column(BigInteger, index=True)
+    tracking_key = db.Column(BigInteger, nullable=False, index=True)
     tracking_delay = db.Column(SmallInteger, nullable=False, default=0)
+
+    tracking_callsign = db.Column(Unicode(5))
 
     # Time and IP of creation
 
@@ -79,7 +81,12 @@ class User(db.Model):
     # Other settings
 
     admin = db.Column(Boolean, nullable=False, default=False)
-    eye_candy = db.Column(Boolean, nullable=False, default=False)
+
+    ##############################
+
+    def __init__(self, *args, **kw):
+        self.generate_tracking_key()
+        super(User, self).__init__(*args, **kw)
 
     ##############################
 
@@ -115,7 +122,7 @@ class User(db.Model):
     def by_recover_key(cls, key):
         return cls.query(recover_key=key).first()
 
-    ## Flask Login ###############
+    # Flask Login ################
 
     def is_active(self):
         return True
@@ -151,16 +158,15 @@ class User(db.Model):
 
     ##############################
 
-    def _set_password(self, password):
-        """Hash ``password`` on the fly and store its hashed version."""
-        self._password = self._hash_password(password)
-
-    def _get_password(self):
+    @hybrid_property
+    def password(self):
         """Return the hashed version of the password."""
         return self._password
 
-    password = db.synonym(
-        '_password', descriptor=property(_get_password, _set_password))
+    @password.setter
+    def set_password(self, password):
+        """Hash ``password`` on the fly and store its hashed version."""
+        self._password = self._hash_password(password)
 
     @classmethod
     def _hash_password(cls, password):
@@ -192,7 +198,7 @@ class User(db.Model):
         """
 
         # Make sure accounts without a password can't log in
-        if not self.password:
+        if not self.password or not password:
             return False
 
         hash = sha256()
@@ -219,6 +225,7 @@ class User(db.Model):
 
     ##############################
 
+    @hybrid_method
     def is_manager(self):
         return self.admin
 
@@ -257,7 +264,7 @@ class User(db.Model):
         as pilot ordered by distance
         '''
         from skylines.model.flight import Flight
-        return Flight.get_largest().filter_by(pilot=self)
+        return Flight.get_largest().filter(Flight.pilot == self)
 
     ##############################
 

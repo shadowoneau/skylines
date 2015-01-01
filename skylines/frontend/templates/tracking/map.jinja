@@ -1,0 +1,133 @@
+{% from "macros/flags.jinja" import insert_flag with context %}
+{% from "macros/datetime.jinja" import insert_timeago with context %}
+{% from "macros/links.jinja" import user_link %}
+
+{% extends "base-fullscreen.jinja" %}
+{% set active_page = "tracking" %}
+
+
+{% block title -%}
+{% if pilots|length == 1 -%}
+{{ _('Live Tracking <small>of %(pilot)s</small>', pilot=user_link(pilots[0])) }}
+{%- elif pilots|length == 2 -%}
+{{ _('Live Tracking <small>of %(pilot)s and %(other_pilot)s</small>', pilot=user_link(pilots[0]), other_pilot=user_link(pilots[1])) }}
+{%- else -%}
+{{ _('Live Tracking <small>of %(pilot)s and %(num_pilots)d other pilots</small>', pilot=user_link(pilots[0]), num_pilots=(pilots|length - 1)) }}
+{%- endif %}
+{%- endblock %}
+
+
+{%- block styles %}
+{{ super() }}
+
+{% if traces -%}
+  {% assets 'openlayers_css' -%}
+  <link href="{{ ASSET_URL }}" rel="stylesheet" type="text/css" />
+  {%- endassets %}
+{%- endif %}
+{%- endblock %}
+
+
+{%- block scripts %}
+{{ super() }}
+
+{% if traces -%}
+  {% assets 'openlayers_js' -%}
+  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {%- endassets %}
+
+  {% assets 'flot_js' -%}
+  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {%- endassets %}
+{%- endif %}
+
+{% assets 'flight_js' -%}
+<script type="text/javascript" src="{{ ASSET_URL }}"></script>
+{%- endassets %}
+
+{% assets 'tracking_js' -%}
+<script type="text/javascript" src="{{ ASSET_URL }}"></script>
+{%- endassets %}
+
+{% if traces -%}
+<script type="text/javascript">
+  $(function() {
+    slUnits.init({{ h.json.dumps(h.get_setting_name('distance_unit')) }},
+                 {{ h.json.dumps(h.get_setting_name('speed_unit')) }},
+                 {{ h.json.dumps(h.get_setting_name('lift_unit')) }},
+                 {{ h.json.dumps(h.get_setting_name('altitude_unit')) }});
+
+    initOpenLayers("map_canvas",
+                   "{{ config.get('SKYLINES_MAP_TILE_URL') }}",
+                   { {% if 'baselayer' in request.args %}'base_layer': '{{ request.args['baselayer'] }}',{% endif %}{% if 'overlays' in request.args %}'overlay_layers': '{{ request.args['overlays'] }}',{% endif %} });
+    initFlightLayer();
+    initBaro($("#barogram"));
+
+    // initiate tracking mode
+    default_time = -1;
+    setTime(default_time);
+
+    {% for pilot, trace in zip(pilots, traces) -%}
+    {% if trace -%}
+    addFlight({{ pilot.id }},
+      {{ h.json.dumps(trace.encoded.points) }},
+      {{ h.json.dumps(trace.encoded.levels) }},
+      {{ trace.num_levels }},
+      {{ h.json.dumps(trace.barogram_t) }},
+      {{ h.json.dumps(trace.barogram_h) }},
+      {{ h.json.dumps(trace.enl) }},
+      {{ h.json.dumps(trace.zoom_levels) }},
+      undefined,
+      {{ h.json.dumps(trace.barogram_t) }},
+      {{ h.json.dumps(trace.elevations) }},
+      {
+        competition_id: "{{ pilot.tracking_callsign or pilot.initials() }}",
+        color: "{{ pilot.color }}",
+      }
+    );
+    {%- endif %}
+    {%- endfor %}
+
+    var factor = $("#barogram")[0].offsetHeight / map.getSize().h;
+    var zoomExtent = flights.getBounds().clone().scale(1.02);
+    zoomExtent.bottom -= zoomExtent.getHeight() * factor * 3/2;
+
+    map.zoomToExtent(zoomExtent);
+
+    hoverMap();
+
+    $.getScript("https://maps.google.com/maps/api/js?v=3.7&sensor=false&callback=addGoogleLayer");
+    addBingLayers("{{ config.get('SKYLINES_BING_API_KEY', 'null') }}");
+    addReliefLayer();
+
+    // update flight track every 15 seconds
+    setInterval(function() {
+      updateFlightsFromJSON();
+    }, 15*1000);
+
+    initInfoBox({flight_info: false, location_info: true});
+  });
+</script>
+{%- endif %}
+{%- endblock %}
+
+
+{% block content -%}
+{% if traces -%}
+<div id="map_canvas" class="olFullscreen"></div>
+<div style="position: absolute; bottom: 0; width:100%; background-color: white; opacity: 0.8;">
+    <div style="overflow: auto; max-height: 115px">
+        <table id="fix-data" class="table table-condensed"></table>
+    </div>
+    <div id="barogram" style="width:100%; height:100pt;"></div>
+</div>
+{%- else -%}
+<p style="margin:10pt;margin-top:40pt;">
+  {% if pilots|length == 1 -%}
+  {% trans %}There is no live track of this pilot currently.{% endtrans %}
+  {%- else -%}
+  {% trans %}There are no live tracks of these pilots currently.{% endtrans %}
+  {%- endif %}
+</p>
+{%- endif %}
+{%- endblock %}

@@ -13,7 +13,7 @@ base for XCSoar's live tracking functionalities.
 
 *SkyLines* is far from finished yet, but it has been running in production for
 quite some time now. You can reach the official server at
-<http://www.skylines-project.org> or <http://www.skylines.aero>.
+<http://www.skylines.aero>.
 
 Build Status: [![Build Status](https://travis-ci.org/skylines-project/skylines.png?branch=master)](https://travis-ci.org/skylines-project/skylines)
 
@@ -35,7 +35,7 @@ For more information, please refer to the [git documentation](http://git-scm.com
 * [Flask](http://flask.pocoo.org/) web application microframework for Python
 * [SQLAlchemy](http://www.sqlalchemy.org/) ORM framework with
   [GeoAlchemy 2](https://geoalchemy-2.readthedocs.org) extension
-* [Twisted](http://twistedmatrix.com/) networking engine for Python (used for
+* [gevent](http://www.gevent.org/) coroutine-based network library for Python (used for
   the live tracking server)
 
 The process of installing these components and setting up a server for local
