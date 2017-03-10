@@ -3,7 +3,7 @@ import shlex
 from sqlalchemy import literal_column, cast, desc, Unicode
 from sqlalchemy.dialects.postgresql import array
 
-from skylines.model import db
+from skylines.database import db
 
 
 PATTERNS = [
@@ -12,8 +12,6 @@ PATTERNS = [
     ('% {}%', 2),  # Has token at word start
     ('%{}%', 1),   # Has token
 ]
-
-##############################
 
 
 def search_query(cls, tokens,
@@ -72,6 +70,9 @@ def search_query(cls, tokens,
     return query
 
 
+db.Model.search_query = classmethod(search_query)
+
+
 def combined_search_query(models, tokens, include_misses=False, ordered=True):
     models, tokens = process_type_option(models, tokens)
 
@@ -90,8 +91,6 @@ def combined_search_query(models, tokens, include_misses=False, ordered=True):
         query = query.order_by(desc('weight'))
 
     return query
-
-##############################
 
 
 def process_type_option(models, tokens):
@@ -168,8 +167,6 @@ def __filter_prefixed_tokens(prefix, tokens):
 
     return contents, new_tokens
 
-##############################
-
 
 def text_to_tokens(search_text):
     try:
@@ -186,8 +183,6 @@ def escape_tokens(tokens):
     tokens = [t.replace('*', '%') for t in tokens]
 
     return tokens
-
-##############################
 
 
 def weight_expression(columns, tokens):
@@ -207,7 +202,7 @@ def weight_expression(columns, tokens):
 
                 # Adjust the weight for the length of the token
                 # (the long the matched token, the greater the weight)
-                weight = weight * len_token
+                weight *= len_token
 
                 # Create the weighted ILIKE expression
                 expression = column.weighted_ilike(token_pattern, weight)
@@ -216,8 +211,6 @@ def weight_expression(columns, tokens):
                 expressions.append(expression)
 
     return sum(expressions)
-
-##############################
 
 
 def process_result_details(models, results):

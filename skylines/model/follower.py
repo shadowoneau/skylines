@@ -2,7 +2,7 @@ from datetime import datetime
 
 from sqlalchemy.types import Integer, DateTime
 
-from skylines.model import db
+from skylines.database import db
 
 
 class Follower(db.Model):
@@ -29,6 +29,9 @@ class Follower(db.Model):
 
     @classmethod
     def follows(cls, source, destination):
+        if source == destination:
+            return False
+
         return cls.query(source=source, destination=destination).count() > 0
 
     @classmethod

@@ -1,0 +1,32 @@
+<table class="table">
+  <tbody>
+    {{#each comments as |comment|}}
+      <tr>
+        <td>
+          {{#if comment.user}}
+            <span style="float:left">
+              {{link-to comment.user.name "user" comment.user.id}}:&nbsp;
+            </span>
+          {{/if}}
+
+          {{markdown comment.text}}
+        </td>
+      </tr>
+    {{else}}
+      <tr>
+        <td><em>{{t "no-comments-yet"}}</em></td>
+      </tr>
+    {{/each}}
+
+    {{#if account.user.id}}
+      <tr>
+        <td>
+          <form {{action (perform addCommentTask) on="submit"}}>
+            {{textarea value=addCommentText class="form-control" disabled=addCommentTask.isRunning}}<br/>
+            <input type="submit" value={{t "add-comment"}} class="btn btn-primary" disabled={{addCommentTask.isRunning}}/>
+          </form>
+        </td>
+      </tr>
+    {{/if}}
+  </tbody>
+</table>

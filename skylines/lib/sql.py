@@ -36,31 +36,32 @@ def weighted_ilike(self, value, weight=1):
     # Return ilike expression
     return cast(and_(self != None, self.ilike(value)), Integer) * weight
 
+
 # Inject weighted_ilike() method into String type
 setattr(String.comparator_factory, 'weighted_ilike', weighted_ilike)
 
 
 class _ST_Intersects(GenericFunction):
-    '''
+    """
     ST_Intersects without index search
-    '''
+    """
     name = '_ST_Intersects'
     type = None
 
 
 class _ST_Contains(GenericFunction):
-    '''
+    """
     ST_Contains without index search
-    '''
+    """
     name = '_ST_Contains'
     type = None
 
 
 def query_to_sql(query):
-    '''
+    """
     Convert a sqlalchemy query to raw SQL.
     https://stackoverflow.com/questions/4617291/how-do-i-get-a-raw-compiled-sql-query-from-a-sqlalchemy-expression
-    '''
+    """
 
     from psycopg2.extensions import adapt as sqlescape
 

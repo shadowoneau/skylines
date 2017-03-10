@@ -1,0 +1,14 @@
+{
+  "name": "skylines",
+  "dependencies": {
+    "remarkable": "^1.6.2",
+    "raven-js": "~3.3",
+    "font-awesome": "~4.5.0",
+    "Flot": "flot#0.8.3",
+    "flot-marks": "https://github.com/TobiasLohner/flot-marks.git#f09ded70f5a229a38ba0b9cfa92dbb448ca4daaf",
+    "jquery": "1.10.2",
+    "sidebar-v2": "0.2.1",
+    "eonasdan-bootstrap-datetimepicker": "https://github.com/TobiasLohner/bootstrap-datetimepicker.git#c36342415a1be8fa013548402bf01718ca93d454",
+    "BigScreen": "bigscreen#2.0.4"
+  }
+}

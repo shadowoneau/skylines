@@ -1,0 +1,122 @@
+<div id="sidebar" class="sidebar">
+  <!-- Nav tabs -->
+  <ul class="sidebar-tabs" role="tablist">
+    <li class="active">
+      <a href="#tab-overview" title="{{t "overview"}}" role="tab">
+        {{fa-icon "info" size="lg"}}
+      </a>
+    </li>
+    <li>
+      <a href="#tab-comments" title="{{t "comments"}}" role="tab">
+        {{fa-icon "comments-o" size="lg"}}
+      </a>
+    </li>
+    <li>
+      <a href="#tab-stats-total" title="{{t "total"}}" role="tab">
+        {{fa-icon "bar-chart" size="lg"}}
+      </a>
+    </li>
+    <li>
+      <a href="#tab-stats-legs" title="{{t "leg-statistics"}}" role="tab">
+        {{fa-icon "arrows-h" size="lg"}}
+      </a>
+    </li>
+
+    {{#if phases}}
+      <li>
+        <a href="#tab-stats-phases" title="{{t "phase-statistics"}}" role="tab">
+          {{fa-icon "step-forward" size="lg"}}
+        </a>
+      </li>
+    {{/if}}
+
+    <li>
+      <a href="#tab-wingmen" title="{{t "wingmen"}}" role="tab">
+        {{fa-icon "group" size="lg"}}
+      </a>
+    </li>
+  </ul>
+  <!-- Tab panes -->
+  <div class="sidebar-content">
+    <div class="sidebar-pane active" id="tab-overview">
+      <h3>{{t "overview"}}{{share-button}}</h3>
+      <div class="sidebar-pane-content">
+        {{flight-details-table flight=flight transitionTo=transitionTo}}
+      </div>
+    </div>
+
+    <div class="sidebar-pane" id="tab-comments">
+      <h3>{{t "comments"}}</h3>
+      <div class="sidebar-pane-content">
+        {{comments-list comments=comments flightId=flight.id}}
+      </div>
+    </div>
+
+    <div class="sidebar-pane" id="tab-stats-total">
+      <h3>{{t "statistics"}}</h3>
+      {{flight-performance-panel performance=performance class="sidebar-pane-content"}}
+    </div>
+
+    <div class="sidebar-pane" id="tab-stats-legs">
+      <h3>{{t "leg-statistics"}}</h3>
+      {{flight-leg-panel legs=legs selection=flightPhase.selection onSelect=(action (mut flightPhase.selection)) class="sidebar-pane-content"}}
+    </div>
+
+    {{#if phases}}
+      <div class="sidebar-pane" id="tab-stats-phases">
+        <h3>{{t "phase-statistics"}}</h3>
+        <div class="sidebar-pane-content">
+          <div class="table-responsive">
+            {{flight-phase-table phases=phases selection=flightPhase.selection onSelect=(action (mut flightPhase.selection))}}
+          </div>
+        </div>
+      </div>
+    {{/if}}
+
+    <div class="sidebar-pane" id="tab-wingmen">
+      <h3>{{t "wingmen"}}</h3>
+      <div class="sidebar-pane-content">
+        {{wingman-table visibleFlights=fixCalc.flights nearFlights=nearFlights onSelect=(action "selectWingman")}}
+      </div>
+    </div>
+  </div>
+</div>
+
+{{#flight-map
+  flights=fixCalc.flights
+  fixes=fixCalc.fixes
+  phaseHighlightCoords=flightPhase.coordinates
+  hoverEnabled=(not (or fixCalc.isRunning cesiumEnabled))
+  defaultTime=fixCalc.defaultTime
+  onTimeChange=(action (mut fixCalc.time))
+  onExtentChange=(action (mut mapExtent))
+  onCesiumEnabledChange=(action (mut cesiumEnabled))
+  addFlight=(action "addFlight")
+  calculatePadding=(action "calculatePadding")
+  class="sidebar-map"}}
+
+  {{fullscreen-button fullscreenElement="#fullscreen-content"}}
+  {{playback-button isRunning=fixCalc.isRunning onToggle=(action "togglePlayback")}}
+
+{{/flight-map}}
+
+<div id="barogram_panel" class="map-bottom-panel map-overlay">
+  <div style="overflow: auto; max-height: 115px">
+    {{fix-table
+      flights=fixCalc.flights
+      fixes=fixCalc.fixes
+      selection=(mut selectedFlightId)
+      onRemove=(action "removeFlight")}}
+  </div>
+
+  {{flight-barogram
+    flights=fixCalc.flights
+    selection=selectedFlightId
+    hoverMode=(not fixCalc.isRunning)
+    timeInterval=timeInterval
+    timeHighlight=flightPhase.selection
+    time=fixCalc.time
+    defaultTime=fixCalc.defaultTime}}
+</div>
+
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-hidden="true" style="display:none"></div>

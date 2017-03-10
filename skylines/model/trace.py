@@ -6,7 +6,7 @@ from geoalchemy2.types import Geometry
 from geoalchemy2.elements import WKTElement
 from geoalchemy2.shape import to_shape
 
-from skylines.model import db
+from skylines.database import db
 from .geo import Location
 
 
@@ -29,6 +29,7 @@ class Trace(db.Model):
     contest_type = db.Column(String, nullable=False)
     trace_type = db.Column(String, nullable=False)
 
+    # the optimized distance in meters
     distance = db.Column(Integer)
     duration = db.Column(Interval)
 
@@ -54,6 +55,7 @@ class Trace(db.Model):
                   for location in locations]
         wkt = "LINESTRING({})".format(','.join(points))
         self._locations = WKTElement(wkt, srid=4326)
+
 
 db.Index('traces_contest_idx',
          Trace.flight_id, Trace.contest_type, Trace.trace_type,

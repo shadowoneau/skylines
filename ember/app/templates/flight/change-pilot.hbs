@@ -1,0 +1,7 @@
+{{#form-page title=(t "choose-pilot")}}
+  {{change-pilot-form
+    flightId=model.id
+    flight=model.flight
+    clubMembers=model.clubMembers
+    onDidSave=(action "transitionToFlight")}}
+{{/form-page}}

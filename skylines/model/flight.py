@@ -2,7 +2,6 @@
 
 from datetime import datetime, timedelta
 from bisect import bisect_left
-from flask import current_app
 
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import deferred
@@ -15,13 +14,12 @@ from geoalchemy2.types import Geometry
 from geoalchemy2.shape import to_shape, from_shape
 from shapely.geometry import LineString
 
-from skylines.model import db
+from skylines.database import db
 from skylines.lib.sql import _ST_Intersects, _ST_Contains
 
 from .geo import Location
 from .igcfile import IGCFile
 from .aircraft_model import AircraftModel
-from .elevation import Elevation
 from .contest_leg import ContestLeg
 
 
@@ -226,7 +224,7 @@ class Flight(db.Model):
 
     @classmethod
     def get_largest(cls):
-        '''Returns a query object ordered by distance'''
+        """Returns a query object ordered by distance"""
         return cls.query().order_by(cls.olc_classic_distance.desc())
 
     def get_optimised_contest_trace(self, contest_type, trace_type):
@@ -262,23 +260,16 @@ class Flight(db.Model):
     @property
     def circling_performance(self):
         from skylines.model.flight_phase import FlightPhase
-        stats = [p for p in self._phases
-                 if (p.aggregate
-                     and p.phase_type == FlightPhase.PT_CIRCLING
-                     and p.duration.total_seconds() > 0)]
-        order = [FlightPhase.CD_TOTAL,
-                 FlightPhase.CD_LEFT,
-                 FlightPhase.CD_RIGHT,
-                 FlightPhase.CD_MIXED]
-        stats.sort(lambda a, b: cmp(order.index(a.circling_direction),
-                                    order.index(b.circling_direction)))
-        return stats
+        return [p for p in self._phases if (p.aggregate and
+                                            p.phase_type == FlightPhase.PT_CIRCLING and
+                                            p.duration.total_seconds() > 0)]
 
     @property
     def cruise_performance(self):
         from skylines.model.flight_phase import FlightPhase
-        return [p for p in self._phases
-                if p.aggregate and p.phase_type == FlightPhase.PT_CRUISE]
+        for p in self._phases:
+            if p.aggregate and p.phase_type == FlightPhase.PT_CRUISE:
+                return p
 
     def update_flight_path(self):
         from skylines.lib.xcsoar_ import flight_path
@@ -307,11 +298,11 @@ class Flight(db.Model):
 
 
 class FlightPathChunks(db.Model):
-    '''
+    """
     This table stores flight path chunks of about 100 fixes per column which
     enable PostGIS/Postgres to do fast queries due to tight bounding boxes
     around those short flight pahts.
-    '''
+    """
 
     __tablename__ = 'flight_path_chunks'
 
@@ -336,7 +327,7 @@ class FlightPathChunks(db.Model):
 
     @staticmethod
     def get_near_flights(flight, filter=None):
-        '''
+        """
         WITH src AS
             (SELECT ST_Buffer(ST_Simplify(locations, 0.005), 0.015) AS src_loc_buf,
                     start_time AS src_start,
@@ -360,7 +351,7 @@ class FlightPathChunks(db.Model):
                   locations && src_loc_buf AND
                   _ST_Intersects(ST_Simplify(locations, 0.005), src_loc_buf)) AS foo
         WHERE _ST_Contains(src_loc_buf, (dst_points).geom);
-        '''
+        """
 
         cte = db.session.query(FlightPathChunks.locations.ST_Simplify(0.005).ST_Buffer(0.015).label('src_loc_buf'),
                                FlightPathChunks.start_time.label('src_start'),
@@ -495,62 +486,3 @@ class FlightPathChunks(db.Model):
         db.session.commit()
 
         return True
-
-
-def get_elevations_for_flight(flight):
-    cached_elevations = current_app.cache.get('elevations_' + flight.__repr__())
-    if cached_elevations:
-        return cached_elevations
-
-    '''
-    WITH src AS
-        (SELECT ST_DumpPoints(flights.locations) AS location,
-                flights.timestamps AS timestamps,
-                flights.locations AS locations
-        FROM flights
-        WHERE flights.id = 30000)
-    SELECT timestamps[(src.location).path[1]] AS timestamp,
-           ST_Value(elevations.rast, (src.location).geom) AS elevation
-    FROM elevations, src
-    WHERE src.locations && elevations.rast AND (src.location).geom && elevations.rast;
-    '''
-
-    # Prepare column expressions
-    location = Flight.locations.ST_DumpPoints()
-
-    # Prepare cte
-    cte = db.session.query(location.label('location'),
-                           Flight.locations.label('locations'),
-                           Flight.timestamps.label('timestamps')) \
-                    .filter(Flight.id == flight.id).cte()
-
-    # Prepare column expressions
-    timestamp = literal_column('timestamps[(location).path[1]]')
-    elevation = Elevation.rast.ST_Value(cte.c.location.geom)
-
-    # Prepare main query
-    q = db.session.query(timestamp.label('timestamp'),
-                         elevation.label('elevation')) \
-                  .filter(and_(cte.c.locations.intersects(Elevation.rast),
-                               cte.c.location.geom.intersects(Elevation.rast))).all()
-
-    if len(q) == 0:
-        return []
-
-    start_time = q[0][0]
-    start_midnight = start_time.replace(hour=0, minute=0, second=0,
-                                        microsecond=0)
-
-    elevations = []
-    for time, elevation in q:
-        if elevation is None:
-            continue
-
-        time_delta = time - start_midnight
-        time = time_delta.days * 86400 + time_delta.seconds
-
-        elevations.append((time, elevation))
-
-    current_app.cache.set('elevations_' + flight.__repr__(), elevations, timeout=3600 * 24)
-
-    return elevations

@@ -1,0 +1,16 @@
+<div class="container">
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+      {{fa-icon "bars" size="lg"}} <span class="sr-only">Toggle navigation</span>
+    </button>
+    {{#link-to "index" class="navbar-brand"}}
+      {{svg-jar "logo" class="logo"}} <span class="skylines-blue">Sky</span><span class="skylines-white">Lines</span>
+    {{/link-to}}
+  </div>
+
+  <div class="collapse navbar-collapse navbar-ex1-collapse">
+    {{nav-bar-menu}}
+    {{nav-bar-search-form onSearch=onSearch}}
+    {{nav-bar-menu-right didClickUpload=didClickUpload}}
+  </div>
+</div>

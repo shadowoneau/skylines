@@ -1,43 +1,67 @@
+import immobilus  # noqa
+
+import os
+import random
+import shutil
+
 import pytest
 
 import config
-from skylines import model, create_app, create_frontend_app
+from skylines import database, create_app
+from skylines.app import SkyLines
 
-from tests import setup_app, setup_db, teardown_db, clean_db
-from tests.data.bootstrap import bootstrap
+from tests import setup_db, teardown_db, clean_db
+from tests.data import users, airspace
 
 
-@pytest.yield_fixture(scope="session")
+@pytest.fixture(scope="function")
+def seeded_random():
+    """
+    Calls random.seed() with a constant to ensure that random always returns
+    the same results.
+    """
+
+    random.seed(1234)
+
+
+@pytest.fixture(scope="session")
 def app():
     """Global skylines application fixture
 
     Initialized with testing config file.
     """
-    app = create_app(config_file=config.TESTING_CONF_PATH)
-    yield app
+    yield create_app(config_file=config.TESTING_CONF_PATH)
 
 
-@pytest.fixture(scope="class")
-def app_class(request, app):
-    request.cls.app = app
+@pytest.fixture(scope="function")
+def files_folder(app):
+    """
+    Creates a clean upload folder
+    """
+    filesdir = app.config['SKYLINES_FILES_PATH']
+    if os.path.exists(filesdir):
+        shutil.rmtree(filesdir)
+
+    os.makedirs(filesdir)
 
 
-@pytest.yield_fixture(scope="session")
-def db_schema(app):
+@pytest.fixture(scope="session")
+def db(app):
     """Creates clean database schema and drops it on teardown
 
     Note, that this is a session scoped fixture, it will be executed only once
     and shared among all tests. Use `db` fixture to get clean database before
     each test.
     """
-    with app.app_context():
-        setup_db()
-        yield model.db.session
-        teardown_db()
+    assert isinstance(app, SkyLines)
+
+    setup_db(app)
+    yield database.db
+    teardown_db()
 
 
-@pytest.yield_fixture(scope="function")
-def db(db_schema, app):
+@pytest.fixture(scope="function")
+def db_session(db, app):
     """Provides clean database before each test. After each test,
     session.rollback() is issued.
 
@@ -45,43 +69,54 @@ def db(db_schema, app):
 
     Return sqlalchemy session.
     """
+    assert isinstance(app, SkyLines)
+
     with app.app_context():
         clean_db()
-        yield model.db.session
-        model.db.session.rollback()
+        yield db.session
+        db.session.rollback()
 
 
-@pytest.yield_fixture(scope="function")
-def bootstraped_db(db):
-    """Provides clean db, bootstrapped with some initial data  (see
-    `tests.bootstrap()`)
+@pytest.fixture(scope="function")
+def test_admin(db_session):
     """
-    bootstrap()
-    yield model.db.session
-
-
-@pytest.yield_fixture(scope="session")
-def frontend_app():
-    """Set up global front-end app for functional tests
-
-    Initialized once per test-run
+    Creates a test admin
     """
-    app = create_frontend_app(config.TESTING_CONF_PATH)
-    with app.app_context():
-        setup_app(app)
-        setup_db()
-        yield app
-        teardown_db()
+    user = users.test_admin()
+    db_session.add(user)
+    db_session.commit()
+    return user
 
 
-@pytest.yield_fixture(scope="function")
-def frontend(frontend_app):
-    """Clean database before each frontend test
-
-    This fixture uses frontend_app, suitable for functional tests.
+@pytest.fixture(scope="function")
+def test_user(db_session):
     """
-    with frontend_app.app_context():
-        clean_db()
-        bootstrap()
-        yield frontend_app
-        model.db.session.rollback()
+    Creates a single test user
+    """
+    user = users.test_user()
+    db_session.add(user)
+    db_session.commit()
+    return user
+
+
+@pytest.fixture(scope="function")
+def test_users(db_session):
+    """
+    Creates 50 test users
+    """
+    _users = users.test_users()
+    for user in _users:
+        db_session.add(user)
+    db_session.commit()
+    return _users
+
+
+@pytest.fixture(scope="function")
+def test_airspace(db_session):
+    """
+    Creates a single test airspace
+    """
+    test_airspace = airspace.test_airspace()
+    db_session.add(test_airspace)
+    db_session.commit()
+    return test_airspace

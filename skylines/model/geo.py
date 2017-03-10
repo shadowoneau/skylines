@@ -6,7 +6,7 @@ from geoalchemy2.elements import WKTElement
 from geoalchemy2.types import Geometry, Geography
 from geoalchemy2.shape import to_shape
 
-from skylines.model import db
+from skylines.database import db
 from skylines.lib.geo import geographic_distance
 
 
@@ -25,6 +25,10 @@ class Location(object):
         return WKTElement(self.to_wkt(), srid=srid)
 
     def make_point(self, srid=4326):
+        """
+        :type srid: int or None
+        """
+
         point = db.func.ST_MakePoint(self.longitude, self.latitude)
         if srid:
             point = db.func.ST_SetSRID(point, srid)
@@ -35,8 +39,11 @@ class Location(object):
         coords = to_shape(wkb)
         return Location(latitude=coords.y, longitude=coords.x)
 
+    def to_lonlat(self):
+        return [self.longitude, self.latitude]
+
     def normalize(self):
-        self.longitude = self.longitude % 360
+        self.longitude %= 360
         if self.longitude > 180:
             self.longitude -= 360
 
@@ -46,7 +53,7 @@ class Location(object):
     @staticmethod
     def get_clustered_locations(location_column,
                                 threshold_radius=1000, filter=None):
-        '''
+        """
         SELECT ST_Centroid(
             (ST_Dump(
                 ST_Union(
@@ -56,7 +63,7 @@ class Location(object):
                 )
             )
         ).geom) FROM flights WHERE pilot_id=31;
-        '''
+        """
 
         # Cast the takeoff_location_wkt column to Geography
         geography = cast(location_column, Geography)

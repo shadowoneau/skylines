@@ -1,0 +1,62 @@
+<div class="well">
+  <table class="right">
+    {{#if user.email}}
+      <tr>
+        <th>{{t "email-address"}}</th>
+        <td>{{user.email}}</td>
+      </tr>
+    {{/if}}
+
+    <tr>
+      <th>{{t "name"}}</th>
+      <td>{{user.name}}</td>
+    </tr>
+
+    <tr>
+      <th>{{t "club"}}</th>
+      <td>
+        {{#if user.club}}
+          {{#link-to "club" user.club.id}}{{user.club.name}}{{/link-to}}
+        {{else}}
+          [{{t "unassigned"}}]
+        {{/if}}
+
+        {{#if editable}}
+          {{link-to (t "change") "settings.club" class="btn btn-default btn-sm"}}
+        {{/if}}
+      </td>
+    </tr>
+
+    {{#if user.followers}}
+      <tr>
+        <th>{{t "followers"}}</th>
+        <td>{{#link-to "user.followers" user.id}}{{t "NUM-pilots" num=user.followers}}{{/link-to}}</td>
+      </tr>
+    {{/if}}
+
+    {{#if user.following}}
+      <tr>
+        <th>{{t "following"}}</th>
+        <td>{{#link-to "user.following" user.id}}{{t "NUM-pilots" num=user.following}}{{/link-to}}</td>
+      </tr>
+    {{/if}}
+  </table>
+</div>
+
+<p style="margin-top: 10px">
+  {{#if editable}}
+    {{#link-to "settings.profile" class="btn btn-default"}}{{fa-icon "cog"}} {{t "settings"}}{{/link-to}}
+  {{/if}}
+
+  {{#if (and account.user (not-eq account.user.id user.id))}}
+    {{#if user.followed}}
+      <button class="btn btn-default" disabled={{unfollowTask.isRunning}} {{action (perform unfollowTask)}}>{{t "unfollow"}}</button>
+    {{else}}
+      <button class="btn btn-default" disabled={{followTask.isRunning}} {{action (perform followTask)}}>{{t "follow"}}</button>
+    {{/if}}
+  {{/if}}
+
+  {{#link-to "flights.pilot" user.id class="btn btn-default"}}{{fa-icon "plane"}} {{t "flights"}}{{/link-to}}
+  {{#link-to "statistics.pilot" user.id class="btn btn-default"}}{{fa-icon "bar-chart"}} {{t "statistics"}}{{/link-to}}
+  {{#link-to "timeline" (query-params user=user.id) class="btn btn-default"}}{{fa-icon "clock-o"}} {{t "timeline"}}{{/link-to}}
+</p>

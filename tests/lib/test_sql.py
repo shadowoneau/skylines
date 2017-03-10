@@ -2,7 +2,7 @@ import pytest
 
 from sqlalchemy import Column, Integer, String, Unicode
 
-from skylines.model import db
+from skylines.database import db
 
 
 class ExampleTable(db.Model):
@@ -13,7 +13,7 @@ class ExampleTable(db.Model):
     uni = Column(Unicode(32))
 
 
-@pytest.mark.usefixtures("db")
+@pytest.mark.usefixtures("db_session")
 class TestSqlLib:
 
     def setup(self):

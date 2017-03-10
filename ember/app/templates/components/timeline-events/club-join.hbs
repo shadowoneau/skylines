@@ -1,0 +1,17 @@
+<td class="icon">
+  {{fa-icon "group" class="small"}}
+</td>
+<td>
+  {{link-to (t "show") "club" event.club.id class="btn btn-default btn-sm pull-right"}}
+  <p>
+    {{#if event.unread}}<span class="badge badge-warning">{{t 'new'}}</span>{{/if}}
+    <small><abbr title={{format-time event.time format="full"}}>{{format-relative event.time}}</abbr></small>
+  </p>
+  <p>
+    {{format-html-message translationKey
+      actor=event.actor.name
+      actorURL=(href-to "user" event.actor.id)
+      club=event.club.name
+      clubURL=(href-to "club" event.club.id)}}
+  </p>
+</td>

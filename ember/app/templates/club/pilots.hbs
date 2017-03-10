@@ -1,0 +1,31 @@
+{{#base-page}}
+  <div class="page-header">
+    <h1>{{format-html-message "members-of-CLUB" club=club.name clubURL=(href-to "club" club.id)}}</h1>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <table class="table table-striped">
+        <thead>
+        <tr>
+          <th>{{t "name"}}</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{#each model.users as |user|}}
+          <tr>
+            <td class="column-buttons">
+              {{#link-to "user" user.id}}{{user.name}}{{/link-to}}
+
+              <div class="pull-right">
+                {{#link-to "flights.pilot" user.id class="btn btn-default btn-sm"}}{{fa-icon "plane"}} {{t "flights"}}{{/link-to}}
+                {{#link-to "statistics.pilot" user.id class="btn btn-default btn-sm"}}{{fa-icon "bar-chart"}} {{t "statistics"}}{{/link-to}}
+              </div>
+            </td>
+          </tr>
+        {{/each}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{{/base-page}}

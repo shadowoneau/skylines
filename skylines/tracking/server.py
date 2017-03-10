@@ -7,7 +7,9 @@ from gevent.server import DatagramServer
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.sql.expression import or_
 
-from skylines.model import db, User, TrackingFix, Follower, Elevation
+from skylines.database import db
+from skylines.model import User, TrackingFix, Follower, Elevation
+from skylines.sentry import sentry
 from skylines.tracking.crc import check_crc, set_crc
 
 # More information about this protocol can be found in the XCSoar
@@ -48,7 +50,7 @@ class TrackingServer(DatagramServer):
     def init_app(self, app):
         self.app = app
 
-    def pingReceived(self, host, port, key, payload):
+    def ping_received(self, host, port, key, payload):
         if len(payload) != 8: return
         id, reserved, reserved2 = struct.unpack('!HHI', payload)
 
@@ -66,7 +68,7 @@ class TrackingServer(DatagramServer):
         data = set_crc(data)
         self.socket.sendto(data, (host, port))
 
-    def fixReceived(self, host, key, payload):
+    def fix_received(self, host, key, payload):
         if len(payload) != 32: return
 
         pilot = User.by_tracking_key(key)
@@ -98,6 +100,9 @@ class TrackingServer(DatagramServer):
                         timedelta(days=1))
         else:
             log("bad time stamp: " + str(time_of_day))
+            fix.time = datetime.utcnow()
+
+        fix.time_visible = fix.time + timedelta(minutes=pilot.tracking_delay)
 
         flags = data[0]
         if flags & FLAG_LOCATION:
@@ -136,7 +141,7 @@ class TrackingServer(DatagramServer):
             log('database error:' + str(e))
             db.session.rollback()
 
-    def trafficRequestReceived(self, host, port, key, payload):
+    def traffic_request_received(self, host, port, key, payload):
         if len(payload) != 8: return
 
         pilot = User.by_tracking_key(key)
@@ -179,7 +184,7 @@ class TrackingServer(DatagramServer):
             .join(TrackingFix.pilot) \
             .filter(TrackingFix.pilot_id != pilot.id) \
             .filter(TrackingFix.max_age_filter(2)) \
-            .filter(TrackingFix.delay_filter(User.tracking_delay_interval())) \
+            .filter(TrackingFix.time_visible <= datetime.utcnow()) \
             .filter(TrackingFix.location_wkt != None) \
             .filter(TrackingFix.altitude != None) \
             .filter(or_(*or_filters)) \
@@ -215,7 +220,7 @@ class TrackingServer(DatagramServer):
         log("%s TRAFFIC_REQUEST %s -> %d locations" %
             (host, unicode(pilot).encode('utf8', 'ignore'), count))
 
-    def userNameRequestReceived(self, host, port, key, payload):
+    def username_request_received(self, host, port, key, payload):
         """The client asks for the display name of a user account."""
 
         if len(payload) != 8: return
@@ -255,7 +260,7 @@ class TrackingServer(DatagramServer):
             (host, unicode(pilot).encode('utf8', 'ignore'),
              unicode(user).encode('utf8', 'ignore')))
 
-    def handle(self, data, (host, port)):
+    def __handle(self, data, (host, port)):
         if len(data) < 16: return
 
         header = struct.unpack('!IHHQ', data[:16])
@@ -264,16 +269,22 @@ class TrackingServer(DatagramServer):
 
         with self.app.app_context():
             if header[2] == TYPE_FIX:
-                self.fixReceived(host, header[3], data[16:])
+                self.fix_received(host, header[3], data[16:])
             elif header[2] == TYPE_PING:
-                self.pingReceived(host, port, header[3], data[16:])
+                self.ping_received(host, port, header[3], data[16:])
             elif header[2] == TYPE_TRAFFIC_REQUEST:
-                self.trafficRequestReceived(host, port, header[3], data[16:])
+                self.traffic_request_received(host, port, header[3], data[16:])
             elif header[2] == TYPE_USER_NAME_REQUEST:
-                self.userNameRequestReceived(host, port, header[3], data[16:])
+                self.username_request_received(host, port, header[3], data[16:])
 
-    def serve_forever(self):
+    def handle(self, data, address):
+        try:
+            self.__handle(data, address)
+        except Exception:
+            sentry.captureException()
+
+    def serve_forever(self, **kwargs):
         if not self.app:
             raise RuntimeError('application not registered on server instance')
 
-        super(TrackingServer, self).serve_forever()
+        super(TrackingServer, self).serve_forever(**kwargs)

@@ -2,13 +2,6 @@
 
 # flake8: noqa
 
-from flask.ext.sqlalchemy import SQLAlchemy
-
-db = SQLAlchemy(session_options=dict(expire_on_commit=False))
-
-import skylines.model.base
-
-# Import your model modules here.
 from .aircraft_model import AircraftModel
 from .airport import Airport
 from .airspace import Airspace
@@ -27,4 +20,5 @@ from .mountain_wave_project import MountainWaveProject
 from .timezone import TimeZone
 from .trace import Trace
 from .tracking import TrackingFix, TrackingSession
+from .oauth import AccessToken, RefreshToken, Client
 from .user import User

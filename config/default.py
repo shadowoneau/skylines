@@ -16,19 +16,13 @@ EMAIL_FROM = 'no-reply@skylines.aero'
 """
 # Logging handlers (disabled in DEBUG mode)
 
-ADMINS = [
-    'tobias.bieniek@gmx.de'
-]
-
-mail_handler = (
-    'ERROR', 'SMTPHandler',
-    ('localhost', 'error@skylines.aero', ADMINS, 'SkyLines Error Report'))
-
 file_handler = (
     'INFO', 'RotatingFileHandler',
     ('/home/turbo/skylines.log', 'a', 10000, 4))
 
-LOGGING_HANDLERS = [mail_handler, file_handler]
+LOGGING_HANDLERS = [file_handler]
+
+SENTRY_DSN = 'https://foo:bar@sentry.io/appid'
 """
 
 # This should probably be changed for a multi-threaded production server
@@ -36,16 +30,12 @@ CACHE_TYPE = 'simple'
 
 SQLALCHEMY_DATABASE_URI = 'postgresql:///skylines'
 
-ASSETS_DEBUG = False
-ASSETS_AUTO_BUILD = True
-ASSETS_DIRECTORY = os.path.join(base, 'webassets')
-ASSETS_URL = '/assets'
 ASSETS_LOAD_DIR = os.path.join(base, 'skylines', 'frontend', 'static')
-ASSETS_LOAD_URL = '/'
 
 SKYLINES_FILES_PATH = os.path.join(base, 'htdocs', 'files')
 SKYLINES_ELEVATION_PATH = os.path.join(base, 'htdocs', 'srtm')
 SKYLINES_MAPSERVER_PATH = os.path.join(base, 'mapserver')
+SKYLINES_BACKEND_PATH = os.path.join(base, 'backend')
 
 SKYLINES_TEMPORARY_DIR = '/tmp'
 

@@ -9,8 +9,10 @@ from shapely.geometry import LineString, box
 import xcsoar
 
 from flask import current_app
-from skylines.model import db
+
+from skylines.database import db
 from skylines.lib.geo import FEET_PER_METER
+from skylines.model.geo import Location
 
 
 class Airspace(db.Model):
@@ -33,7 +35,10 @@ class Airspace(db.Model):
 
     @classmethod
     def by_location(cls, location):
-        '''Returns a query object of all airspaces at the location'''
+        """Returns a query object of all airspaces at the location"""
+        if not isinstance(location, Location):
+            raise TypeError('Invalid `location` parameter.')
+
         return cls.query() \
             .filter(cls.the_geom.ST_Contains(location.make_point()))
 

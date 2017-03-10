@@ -3,24 +3,30 @@ from sqlalchemy.sql.expression import and_, literal_column
 from shapely.geometry import MultiPoint
 from geoalchemy2.shape import from_shape
 
+from skylines.database import db
 from skylines.lib import files
-from skylines.model import db, Elevation, IGCFile, Location
+from skylines.model import Elevation, IGCFile, Location
 from xcsoar import Flight
 
+_FlightPathFix = namedtuple('FlightPathFix', [
+    'datetime', 'seconds_of_day', 'location', 'gps_altitude', 'pressure_altitude',
+    'enl', 'track', 'groundspeed', 'tas', 'ias', 'siu', 'elevation'
+])
 
-flightpathfix_fields = ['datetime', 'seconds_of_day',
-                        'location', 'gps_altitude', 'pressure_altitude',
-                        'enl', 'track', 'groundspeed', 'tas', 'ias',
-                        'siu', 'elevation']
 
-
-class FlightPathFix(namedtuple('FlightPathFix', flightpathfix_fields)):
+class FlightPathFix(_FlightPathFix):
     def __new__(cls, *args, **kwargs):
+        """
+        Custom constructor to support:
+        - Filling fields with None by default
+        - Supplying more `args` then field names
+        - Not specifying all arguments when using `kwargs`
+        """
         values = [None] * 12
 
         values[:min(12, len(args))] = args[:12]
 
-        for i, key in enumerate(flightpathfix_fields):
+        for i, key in enumerate(cls._fields):
             if key in kwargs:
                 values[i] = kwargs[key]
 
@@ -104,7 +110,6 @@ def get_elevation(fixes):
         start_idx += 1
 
     prev = q[start_idx]
-    current = None
 
     for i in xrange(start_idx + 1, len(q)):
         if q[i].elevation is None:

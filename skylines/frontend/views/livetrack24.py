@@ -1,9 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import Blueprint, request
 from werkzeug.exceptions import BadRequest, NotFound, NotImplemented
 
-from skylines.model import db, User, TrackingFix, TrackingSession, Elevation
+from skylines.database import db
+from skylines.model import User, TrackingFix, TrackingSession, Elevation
 
 lt24_blueprint = Blueprint('lt24', 'skylines')
 
@@ -39,10 +40,10 @@ def _parse_session_id():
     return session_id
 
 
-def _parse_fix(pilot_id):
+def _parse_fix(pilot):
     fix = TrackingFix()
     fix.ip = request.remote_addr
-    fix.pilot_id = pilot_id
+    fix.pilot = pilot
 
     # Time
     if 'tm' not in request.values:
@@ -52,6 +53,8 @@ def _parse_fix(pilot_id):
         fix.time = datetime.utcfromtimestamp(int(request.values['tm']))
     except ValueError:
         raise BadRequest('`tm` (time) has to be a POSIX timestamp.')
+
+    fix.time_visible = fix.time + timedelta(minutes=pilot.tracking_delay)
 
     # Location
     if 'lat' in request.values and 'lon' in request.values:
@@ -100,7 +103,7 @@ def _sessionless_fix():
     if not pilot:
         raise NotFound('No pilot found with tracking key `{:X}`.'.format(key))
 
-    fix = _parse_fix(pilot.id)
+    fix = _parse_fix(pilot)
     db.session.add(fix)
     db.session.commit()
     return 'OK'
@@ -112,7 +115,7 @@ def _session_fix():
     if session is None:
         raise NotFound('No open tracking session found with id `{:d}`.'.format(session_id))
 
-    fix = _parse_fix(session.pilot_id)
+    fix = _parse_fix(session.pilot)
     db.session.add(fix)
     db.session.commit()
     return 'OK'

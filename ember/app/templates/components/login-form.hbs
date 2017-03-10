@@ -1,0 +1,27 @@
+<form {{action (perform loginTask) on="submit"}} class="form-login">
+  {{#if (and error (not inline))}}
+    <div class="alert alert-danger" role="alert">{{t "wrong-credentials"}}</div>
+  {{/if}}
+
+  {{validated-input
+    value=email
+    label=(t "email-address")
+    disabled=loginTask.isRunning
+    forceErrorClass=error}}
+
+  {{validated-input
+    type='password'
+    value=password
+    label=(t "password")
+    disabled=loginTask.isRunning
+    forceErrorClass=error}}
+
+  <button class="btn btn-primary btn-block" type="submit" disabled={{loginTask.isRunning}}>
+    {{t "login"}}
+  </button>
+
+  <hr/>
+
+  <div>{{link-to (t "forgot-password") "users.recover"}}</div>
+  <div>{{link-to (t "dont-have-an-account") "users.new"}}</div>
+</form>

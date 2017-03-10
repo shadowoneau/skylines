@@ -1,7 +1,8 @@
-from flask.ext.script import Command, Option
+from flask_script import Command, Option
 
 import math
-from skylines.model import db, MountainWaveProject
+from skylines.database import db
+from skylines.model import MountainWaveProject
 from skylines.lib.string import isnumeric
 from geoalchemy2.elements import WKTElement
 from geoalchemy2.shape import from_shape
@@ -109,7 +110,7 @@ class MWP(Command):
         print "added " + str(j) + " waves"
 
     def ellipse(self, ra, rb, ang, x0, y0, Nb=50):
-        '''
+        """
         ra - major axis length
         rb - minor axis length
         ang - angle
@@ -122,7 +123,7 @@ class MWP(Command):
         written by Peter Blattner, Institute of Microtechnology,
         University of
         Neuchatel, Switzerland, blattner@imt.unine.ch
-        '''
+        """
 
         def xfrange(start, stop, steps):
             step = (stop - start) / steps

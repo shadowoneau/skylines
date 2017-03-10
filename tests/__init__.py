@@ -1,28 +1,14 @@
 """Unit and functional test suite for SkyLines."""
-import os
-import shutil
 
-from skylines.model import db
-from tests.data.bootstrap import bootstrap
+from skylines.database import db
 
 __all__ = ['setup_db', 'setup_app', 'teardown_db']
 
 
-def setup_db():
+def setup_db(app):
     """Method used to build a database"""
+    db.app = app
     db.create_all()
-
-
-def setup_dirs(app):
-    filesdir = app.config['SKYLINES_FILES_PATH']
-    if os.path.exists(filesdir):
-        shutil.rmtree(filesdir)
-    os.makedirs(filesdir)
-
-
-def setup_app(app):
-    setup_db()
-    setup_dirs(app)
 
 
 def teardown_db():
@@ -40,9 +26,3 @@ def clean_db():
     """
     for table in reversed(db.metadata.sorted_tables):
         db.session.execute(table.delete())
-
-
-def clean_db_and_bootstrap():
-    clean_db()
-    bootstrap()
-    db.session.commit()

@@ -1,4 +1,4 @@
-from flask.ext.script import Command, Option
+from flask_script import Command, Option
 
 import re
 import shutil
@@ -12,7 +12,8 @@ from shapely.wkt import loads
 from shapely.geos import ReadingError
 from sqlalchemy.sql.expression import case
 from sqlalchemy import func
-from skylines.model import db, Airspace
+from skylines.database import db
+from skylines.model import Airspace
 from skylines.lib.geo import FEET_PER_METER
 
 airspace_re = re.compile(r'^([^#]{1}.*?)\s+(openair|sua)\s+(https?://.*|file://.*)')
@@ -432,7 +433,9 @@ class AirspaceCommand(Command):
             return False
 
         tolerance = 0.0000001
-        simplify = lambda x: func.ST_SimplifyPreserveTopology(x, tolerance)
+
+        def simplify(x):
+            return func.ST_SimplifyPreserveTopology(x, tolerance)
 
         airspace.the_geom = case(
             [

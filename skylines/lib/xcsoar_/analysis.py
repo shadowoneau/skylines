@@ -32,19 +32,6 @@ def read_location(node):
         return None
 
 
-def import_location_attribute(node, name):
-    """
-    Reads a Location instance from an attribute of the node
-    with the given name.
-    """
-
-    if node is None or name not in node:
-        return None
-
-    location = node[name]
-    return read_location(location)
-
-
 def import_datetime_attribute(node, name):
     if node is None or name not in node:
         return None
@@ -407,8 +394,8 @@ def get_analysis_times(times):
                                             landing=times[i]['landing']))
 
             for period in scoring_periods:
-                total_seconds = (period['scoring_end']['time']
-                                 - period['scoring_start']['time']).total_seconds()
+                total_seconds = (period['scoring_end']['time'] -
+                                 period['scoring_start']['time']).total_seconds()
 
                 if total_seconds > chosen_period_seconds:
                     chosen_period_seconds = total_seconds
@@ -416,8 +403,8 @@ def get_analysis_times(times):
 
     else:
         for i in range(len(times)):
-            total_seconds = (times[i]['landing']['time']
-                             - times[i]['takeoff']['time']).total_seconds()
+            total_seconds = (times[i]['landing']['time'] -
+                             times[i]['takeoff']['time']).total_seconds()
 
             if total_seconds > chosen_period_seconds:
                 chosen_period_seconds = total_seconds
@@ -439,7 +426,7 @@ def run_analyse_flight(flight,
         fp = flight_path(filename, add_elevation=True, max_points=None)
 
     if len(fp) < 2:
-        return None
+        return None, None
 
     xcsoar_flight = xcsoar.Flight(fp)
 

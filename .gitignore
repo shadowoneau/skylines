@@ -1,31 +1,70 @@
-# Compiled python files
-*.pyc
+# Secret environment variables
+.env
 
-# Coverage files
+# Generated Ember.js files
+skylines/frontend/static
+
+### Python template
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# C extensions
+*.so
+
+# Distribution / packaging
+/.Python
+/env/
+/build/
+/develop-eggs/
+/dist/
+/downloads/
+/eggs/
+/.eggs/
+/lib/
+/lib64/
+/parts/
+/sdist/
+/var/
+/*.egg-info/
+/.installed.cfg
+/*.egg
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
 .coverage
-cover
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*,cover
 
-# PyDev files
-.settings/*
-.project
-.pydevproject
-
-# Sublime text files
-*.sublime-workspace
-*.sublime-project
-
+# Translations
 *.mo
-*.egg-info
-*.egg
-build
-dist
+#*.pot
 
-htdocs
+# Django stuff:
+*.log
 
-webassets
+# Sphinx documentation
+/docs/_build/
+
+# PyBuilder
+/target/
 
 # Vagrant
-.vagrant
-Cheffile.lock
-tmp/
-.cookbooks/
+/.vagrant
+
+# htdocs
+/htdocs

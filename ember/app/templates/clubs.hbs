@@ -1,0 +1,32 @@
+{{#base-page}}
+  <div class="page-header">
+    <h1>{{t "clubs"}}</h1>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <table class="table table-striped">
+        <thead>
+        <tr>
+          <th>{{t "name"}}</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{#each model.clubs as |club|}}
+          <tr>
+            <td class="column-buttons">
+              {{link-to club.name "club" club.id }}
+
+              <div class="pull-right">
+                {{#link-to "flights.club" club.id class="btn btn-default btn-sm"}}{{fa-icon "plane"}} {{t "flights"}}{{/link-to}}
+                {{#link-to "statistics.club" club.id class="btn btn-default btn-sm hidden-xs-inline"}}{{fa-icon "bar-chart"}} {{t "statistics"}}{{/link-to}}
+                {{#link-to "club.pilots" club.id class="btn btn-default btn-sm hidden-xs-inline"}}{{fa-icon "group"}} {{t "members"}}{{/link-to}}
+              </div>
+            </td>
+          </tr>
+        {{/each}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{{/base-page}}

@@ -5,11 +5,17 @@ http://en.wikipedia.org/wiki/Base_36#Python_Conversion_Code
 
 
 def encode(number, alphabet='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'):
-    """Converts an integer to a base36 string."""
+    """
+    Converts an integer to a base36 string.
+
+    :type number: int or long
+    :rtype: str
+    """
+
     if not isinstance(number, (int, long)):
         raise TypeError('number must be an integer')
 
-    if number >= 0 and number <= 9:
+    if 0 <= number <= 9:
         return alphabet[number]
 
     base36 = ''
@@ -27,5 +33,10 @@ def encode(number, alphabet='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'):
 
 
 def decode(number):
-    """Converts a base36 string to an integer."""
+    """
+    Converts a base36 string to an integer.
+
+    :type number: str
+    :rtype: int
+    """
     return int(number, 36)

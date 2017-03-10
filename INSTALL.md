@@ -9,12 +9,10 @@ our developers use Ubuntu or Debian too. We recommend to use either one of
 those systems for development, but it may also be possible to make it work on
 OS X or Windows.
 
-There is also a currently unmaintained [Vagrant](http://www.vagrantup.com/) /
-[Chef](http://www.opscode.com/chef/) environment for *SkyLines*. This makes it
-possible to run a virtual machine with Ubuntu dedicated to *SkyLines*
-development on OS X or Windows. This may or may not work currently and for now
-we don't recommend using it. More information can be found in
-[INSTALL.vagrant.md](INSTALL.vagrant.md).
+There is also a [Vagrant](http://www.vagrantup.com/) environment for
+*SkyLines*. This makes it possible to run a virtual machine with Ubuntu
+dedicated to *SkyLines* development on OS X or Windows. More information
+can be found in [INSTALL.vagrant.md](INSTALL.vagrant.md).
 
 
 ## Python, Flask and other dependencies
@@ -85,7 +83,7 @@ by calling `./manage.py db create` from the the command line.
 Since the [XCSoar](http://www.xcsoar.org/) project already has much of the code
 implemented that is necessary for flight analysis, it makes sense to reuse that
 code where applicable. *SkyLines* is using XCSoar as a python library. This library
-is build and installed by the `xcsoar` python package. To build this library you
+is built and installed by the `xcsoar` python package. To build this library you
 might have to install additional libraries like `libcurl`, which can be installed
 on Debian/Ubuntu by executing `apt-get install libcurl4-openssl-dev`. Please have
 a look into the XCSoar documentation if you need more help with the building process.
@@ -104,7 +102,7 @@ If the above steps are completed you should be able to run a base version of
 ## Adding Airports
 
 Since an empty database is boring, you should at least load the airports from
-the [Welt2000](http://www.segelflug.de/vereine/welt2000/) into the database by
+the [Welt2000](http://github.com/skylines-project/welt2000) into the database by
 calling (the `commit` flag indicates that any data should be written to the
 database):
 

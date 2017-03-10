@@ -1,0 +1,213 @@
+<table class="table table-flight-details">
+  <tbody>
+
+  <tr>
+    <th>{{t "pilot"}}</th>
+    <td>
+      {{#if isWritable}}
+        {{#link-to "flight.change-pilot" flight.id class="btn btn-default btn-sm pull-right"}}
+          {{fa-icon "pencil"}} {{t "change"}}
+        {{/link-to}}
+      {{/if}}
+
+      {{#if flight.pilot.id}}
+        {{link-to pilotName "user" flight.pilot.id}}
+      {{else if pilotName}}
+        {{pilotName}}
+      {{/if}}
+
+      {{#if (and pilotName copilotName)}}<br/>{{/if}}
+
+      {{#if flight.copilot.id}}
+        {{link-to copilotName "user" flight.copilot.id}}
+      {{else if copilotName}}
+        {{copilotName}}
+      {{/if}}
+
+      {{#if (not (or pilotName copilotName)) }}
+        [{{t "unspecified"}}]
+      {{/if}}
+    </td>
+  </tr>
+
+  {{#if flight.scoreDate}}
+    <tr>
+      <th>{{t "date"}}</th>
+      <td>{{#link-to "flights.date" flight.scoreDate}}{{format-date flight.scoreDate format="ddmmyyyy" timeZone="UTC"}}{{/link-to}}</td>
+    </tr>
+  {{/if}}
+
+  {{#if flight.takeoffTime}}
+    <tr>
+      <th>{{t "takeoff"}}</th>
+      <td>
+        {{#if flight.takeoffAirport}}
+          {{x-flag code=flight.takeoffAirport.countryCode style="float: right; margin: 3px"}}
+          {{format-html-message "AIRPORT-at-TIME"
+          airport=flight.takeoffAirport.name
+          airportURL=(href-to "flights.airport" flight.takeoffAirport.id)
+          time=(format-time flight.takeoffTime format="hhmmss" timeZone="UTC")}}
+        {{else}}
+          {{format-time flight.takeoffTime format="hhmmss" timeZone="UTC"}}
+        {{/if}}
+      </td>
+    </tr>
+  {{/if}}
+
+  {{#if flight.landingTime}}
+    <tr>
+      <th>{{t "landing"}}</th>
+      <td>
+        {{#if flight.landingAirport}}
+          {{x-flag code=flight.landingAirport.countryCode style="float: right; margin: 3px"}}
+          {{format-html-message "AIRPORT-at-TIME"
+          airport=flight.landingAirport.name
+          airportURL=(href-to "flights.airport" flight.landingAirport.id)
+          time=(format-time flight.landingTime format="hhmmss" timeZone="UTC")}}
+        {{else}}
+          {{format-time flight.landingTime format="hhmmss" timeZone="UTC"}}
+        {{/if}}
+      </td>
+    </tr>
+  {{/if}}
+
+  {{#if duration}}
+    <tr>
+      <th>{{t "duration"}}</th>
+      <td>{{t "n-hours" hours num=(format-seconds duration)}}</td>
+    </tr>
+  {{/if}}
+
+  <tr>
+    <th>{{t "aircraft"}}</th>
+    <td class="column-buttons">
+      {{#if isWritable}}
+        {{#link-to "flight.change-aircraft" flight.id class="btn btn-default btn-sm pull-right"}}
+          {{fa-icon "pencil"}} {{t "change"}}
+        {{/link-to}}
+      {{/if}}
+
+      {{#if flight.model}}
+        <span rel="tooltip" title={{t "index-INDEX" index=flight.model.index}}>{{flight.model.name}}</span>
+      {{else if flight.igcFile.model}}
+        [{{flight.igcFile.model}}]
+      {{else}}
+        [{{t "unknown"}}]
+      {{/if}}
+
+      <br><small>{{registration}} {{#if (and registration competitionId)}}&ndash;{{/if}} {{competitionId}}</small>
+    </td>
+  </tr>
+
+  <tr>
+    <th>{{t "score"}}</th>
+    <td>
+      {{t "POINTS-points-abbr" points=(format-number flight.score minimumFractionDigits=1 maximumFractionDigits=1)}}
+
+      <small><br>
+        {{#if flight.distance}}
+          <span title={{t "olc-distance"}}>
+            <span style="color: #ff2c73">{{fa-icon "arrows-h"}}</span>
+            {{format-distance flight.distance decimals=1}}
+          </span>
+        {{/if}}
+        {{#if flight.triangleDistance}}
+          <span title={{t "fai-triangle-distance"}}>
+            <span style="color: #9f14ff">{{fa-icon "play" rotate=270}}</span>
+            {{format-distance flight.triangleDistance decimals=1}}
+          </span>
+        {{/if}}
+      </small>
+    </td>
+  </tr>
+
+
+  {{#if flight.speed}}
+    <tr>
+      <th>{{t "speed"}}</th>
+      <td>{{format-speed flight.speed}}</td>
+    </tr>
+  {{/if}}
+
+  {{#if flight.club}}
+    <tr>
+      <th>{{t "club"}}</th>
+      <td>{{link-to flight.club.name "club" flight.club.id}}</td>
+    </tr>
+  {{/if}}
+
+  <tr>
+    <th>{{t "uploaded"}}</th>
+    <td>
+      {{format-html-message "TIME-by-USER"
+        time=(format-relative flight.timeCreated)
+        user=flight.igcFile.owner.name
+        userURL=(href-to "user" flight.igcFile.owner.id)}}</td>
+  </tr>
+
+  {{#if isOwner}}
+    <tr>
+      <th>{{t "actions"}}</th>
+      <td>
+        <button type="button" class="btn btn-default btn-sm" data-toggle="modal" data-target="#deleteModal">
+          {{fa-icon "remove"}} {{t "delete"}}
+        </button>
+
+        {{#if isPrivate}}
+          <button type="button" class="btn btn-default btn-sm" data-toggle="modal" data-target="#publishModal">
+            {{fa-icon "globe"}} {{t "publish"}}
+          </button>
+        {{/if}}
+      </td>
+    </tr>
+  {{/if}}
+  </tbody>
+</table>
+
+<p>
+  <a href="/files/{{flight.igcFile.filename}}" title={{flight.igcFile.filename}} class="btn btn-default" data-href-to-ignore>
+    {{fa-icon "download" size="lg"}} IGC
+  </a>
+
+  <span title={{t "pin-button-title"}}>
+    {{pin-button flightId=flight.id}}
+  </span>
+</p>
+
+{{#ember-wormhole to="modal-wormhole"}}
+  <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close" disabled={{deleteTask.isRunning}}><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">{{t "delete-flight"}}</h4>
+        </div>
+        <div class="modal-body">
+          <label class="large">{{t "delete-flight-confirmation-text"}}</label>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" {{action (perform deleteTask)}} disabled={{deleteTask.isRunning}}>{{t "yes"}}</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal" disabled={{deleteTask.isRunning}}>{{t "no"}}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="publishModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close" disabled={{publishTask.isRunning}}><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">{{t "publish-flight"}}</h4>
+        </div>
+        <div class="modal-body">
+          <label class="large">{{t "publish-flight-confirmation-text"}}</label>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" {{action (perform publishTask)}} disabled={{publishTask.isRunning}}>{{t "yes"}}</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal" disabled={{publishTask.isRunning}}>{{t "no"}}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+{{/ember-wormhole}}

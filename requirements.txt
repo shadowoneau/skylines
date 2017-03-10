@@ -5,12 +5,9 @@
 # Install development requirements
 
 fabric==1.8.2
-pytest==2.5.0
-wsgiref==0.1.2
-zope.testbrowser==4.0.2
-WebTest==1.4.3
+pytest==3.0.6
+pytest-cov==2.4.0
 mock==1.0.1
-flake8==2.1.0
-pyflakes==0.8.1
-pep8==1.5.3
-http://closure-linter.googlecode.com/files/closure_linter-latest.tar.gz
+fake-factory==0.5.0
+flake8==3.3.0
+immobilus==0.2.0

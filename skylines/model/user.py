@@ -11,9 +11,8 @@ from sqlalchemy.sql.expression import cast, case
 from sqlalchemy.dialects.postgresql import INET
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 
-from skylines.model import db
+from skylines.database import db
 from skylines.lib.sql import LowerCaseComparator
-from skylines.lib.formatter import units
 
 __all__ = ['User']
 
@@ -21,9 +20,6 @@ __all__ = ['User']
 class User(db.Model):
     """
     User definition.
-
-    This is the user definition used by :mod:`repoze.who`, which requires at
-    least the ``user_name`` column.
     """
 
     __tablename__ = 'users'
@@ -31,7 +27,7 @@ class User(db.Model):
 
     id = db.Column(Integer, autoincrement=True, primary_key=True)
 
-    # eMail address and name of the user
+    # Email address and name of the user
 
     email_address = db.column_property(
         db.Column(Unicode(255)), comparator_factory=LowerCaseComparator)
@@ -99,28 +95,28 @@ class User(db.Model):
 
     ##############################
 
-    @classmethod
-    def by_email_address(cls, email):
+    @staticmethod
+    def by_email_address(email):
         """Return the user object whose email address is ``email``."""
-        return cls.query(email_address=email).first()
+        return User.query(email_address=email).first()
 
-    @classmethod
-    def by_credentials(cls, email, password):
+    @staticmethod
+    def by_credentials(email, password, *args, **kwargs):
         """
         Return the user object whose email address is ``email`` if the
         password is matching.
         """
-        user = cls.query(email_address=email).first()
+        user = User.by_email_address(email)
         if user and user.validate_password(password):
             return user
 
-    @classmethod
-    def by_tracking_key(cls, key):
-        return cls.query(tracking_key=key).first()
+    @staticmethod
+    def by_tracking_key(key):
+        return User.query(tracking_key=key).first()
 
-    @classmethod
-    def by_recover_key(cls, key):
-        return cls.query(recover_key=key).first()
+    @staticmethod
+    def by_recover_key(key):
+        return User.query(recover_key=key).first()
 
     # Flask Login ################
 
@@ -164,7 +160,7 @@ class User(db.Model):
         return self._password
 
     @password.setter
-    def set_password(self, password):
+    def password(self, password):
         """Hash ``password`` on the fly and store its hashed version."""
         self._password = self._hash_password(password)
 
@@ -256,54 +252,25 @@ class User(db.Model):
         from skylines.model.follower import Follower
         return Follower.follows(self, other)
 
+    @property
+    def num_followers(self):
+        from skylines.model.follower import Follower
+        return Follower.query(destination=self).count()
+
+    @property
+    def num_following(self):
+        from skylines.model.follower import Follower
+        return Follower.query(source=self).count()
+
     ##############################
 
     def get_largest_flights(self):
-        '''
+        """
         Returns a query with all flights by the user
         as pilot ordered by distance
-        '''
+        """
         from skylines.model.flight import Flight
         return Flight.get_largest().filter(Flight.pilot == self)
-
-    ##############################
-
-    @property
-    def unit_preset(self):
-        """Calculate unit preset based on user unit preference.
-
-        If all user unit settings exactly matches one of the preset, return
-        that preset id. Otherwise return 0, that is interpreted as 'Custom'
-        preset.
-        """
-        for pref, preset in enumerate(units.UNIT_PRESETS):
-            p = preset[1]
-            if not p:
-                continue
-            eq = [p['distance_unit'] == units.DISTANCE_UNITS[self.distance_unit][0],
-                  p['speed_unit'] == units.SPEED_UNITS[self.speed_unit][0],
-                  p['lift_unit'] == units.LIFT_UNITS[self.lift_unit][0],
-                  p['altitude_unit'] == units.ALTITUDE_UNITS[self.altitude_unit][0]
-                  ]
-            if all(eq):
-                return pref
-
-        return 0
-
-    @unit_preset.setter
-    def unit_preset(self, preset):
-        """Set individual unit preferences according to given preset
-        """
-        name, settings = units.UNIT_PRESETS[preset]
-        if settings:
-            self.distance_unit = units.unitid(units.DISTANCE_UNITS,
-                                              settings['distance_unit'])
-            self.speed_unit = units.unitid(units.SPEED_UNITS,
-                                           settings['speed_unit'])
-            self.lift_unit = units.unitid(units.LIFT_UNITS,
-                                          settings['lift_unit'])
-            self.altitude_unit = units.unitid(units.ALTITUDE_UNITS,
-                                              settings['altitude_unit'])
 
 
 db.Index('users_lower_email_address_idx',
