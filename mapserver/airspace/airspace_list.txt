@@ -22,6 +22,6 @@ no openair http://soaringweb.org/Airspace/NO/NorwayAirspace20140413.txt
 dk openair http://soaringweb.org/Airspace/DK/DK-OpenAir-AllinOne-20140619.txt
 us openair https://user.xmission.com/~lalley/aviation/countHits.php?count=oaCount&file=allusa.v14.02-06.1.txt
 za openair http://soaringweb.org/Airspace/ZA/SAGlidingAirsp-17102011_v1.3.txt
-au openair http://soaringweb.org/Airspace/AU/australia_class_all_no_ctaf_e_class_bnd_13_11_14.txt
+au openair http://soaringweb.org/Airspace/AU/australia_class_all_16_11_10.txt
 ca openair http://soaringweb.org/Airspace/NA/canadian_airspace_243b.air
 fi openair http://www.hansto.fi/seeyou/files/Ilmatila2012.txt
